@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ku" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>سیستەمی بەڕێوەبردنی کۆگا</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;font-family:Tahoma,Arial;background:linear-gradient(135deg,#e8f7ff,#f7fbff);color:#17324d}
+
+header{background:linear-gradient(120deg,#bcecff,#fff);padding:25px 18px;text-align:center}
+
+header h1{margin:0;font-size:23px}
+
+header p{color:#52738c}
+
+main{max-width:900px;margin:auto;padding:18px}
+
+.card{background:#ffffffd9;border:1px solid #d5eaf7;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 7px 22px #5ca9d515}
+
+input{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cce6f4;border-radius:10px;font:inherit}
+
+button{background:#168fc4;color:white;border:0;padding:11px 16px;border-radius:10px;font:inherit;margin:4px;cursor:pointer}
+
+.secondary{background:#e5f5fc;color:#17324d}
+
+.danger{background:#ef7184}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+.stat{background:#e8f7ff;padding:15px;border-radius:13px;text-align:center}
+
+.stat b{display:block;font-size:23px;margin-top:8px}
+
+table{width:100%;border-collapse:collapse;margin-top:12px}
+
+th,td{padding:10px;border-bottom:1px solid #e1edf5;text-align:right}
+
+th{background:#e8f7ff}
+
+.table-wrap{overflow-x:auto}
+
+.hidden{display:none}
+
+#login{max-width:420px;margin:35px auto}
+
+.small{font-size:12px;color:#668097}
+
+@media(max-width:600px){.stats{grid-template-columns:1fr}.card{padding:13px}}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>📦 سیستەمی بەڕێوەبردنی کۆگا</h1>
+
+<p>بەخێربێیت بۆ سیستەمی کۆگاکەت</p>
+
+</header>
+
+<main>
+
+<section class="card" id="login">
+
+<h2>🔐 چوونەژوورەوە</h2>
+
+<label>ناوی بەکارهێنەر</label>
+
+<input id="username" placeholder="admin">
+
+<label>وشەی نهێنی</label>
+
+<input id="password" type="password" placeholder="وشەی نهێنی">
+
+<button onclick="login()">چوونەژوورەوە</button>
+
+<p class="small">بۆ تاقیکردنەوە: admin / demo123</p>
+
+<p id="loginMsg"></p>
+
+</section>
+
+<section id="dashboard" class="hidden">
+
+<div class="card">
+
+<h2>📊 پوختەی کۆگا</h2>
+
+<div class="stats">
+
+<div class="stat">ژمارەی بەرهەم<b id="total">0</b></div>
+
+<div class="stat">کۆی دانە<b id="quantity">0</b></div>
+
+<div class="stat">بەرهەمی تەواوبوو<b id="empty">0</b></div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>➕ زیادکردنی بەرهەم</h2>
+
+<label>ناوی بەرهەم</label>
+
+<input id="name" placeholder="ناوی بەرهەم">
+
+<label>ژمارەی دانە</label>
+
+<input id="qty" type="number" min="0" placeholder="0">
+
+<label>نرخی کڕین</label>
+
+<input id="buy" type="number" min="0" placeholder="0">
+
+<label>نرخی فرۆشتن</label>
+
+<input id="sell" type="number" min="0" placeholder="0">
+
+<button onclick="addProduct()">زیادکردنی بەرهەم</button>
+
+<p id="message"></p>
+
+</div>
+
+<div class="card">
+
+<h2>📋 لیستی بەرهەمەکان</h2>
+
+<input id="search" placeholder="گەڕان بە ناوی بەرهەم..." oninput="render()">
+
+<div class="table-wrap">
+
+<table>
+
+<thead><tr><th>بەرهەم</th><th>دانە</th><th>کڕین</th><th>فرۆشتن</th><th>کردار</th></tr></thead>
+
+<tbody id="list"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<button class="danger" onclick="logout()">چوونەدەرەوە</button>
+
+</section>
+
+</main>
+
+<script>
+
+let products=JSON.parse(localStorage.getItem("kogaProducts")||"[]");
+
+function login(){
+
+ if(document.getElementById("username").value==="admin" &&
+
+ document.getElementById("password").value==="demo123"){
+
+ document.getElementById("login").classList.add("hidden");
+
+ document.getElementById("dashboard").classList.remove("hidden");
+
+ render();
+
+ }else{
+
+ document.getElementById("loginMsg").innerText="ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە";
+
+ }
+
+}
+
+function logout(){
+
+ document.getElementById("dashboard").classList.add("hidden");
+
+ document.getElementById("login").classList.remove("hidden");
+
+}
+
+function save(){
+
+ localStorage.setItem("kogaProducts",JSON.stringify(products));
+
+ render();
+
+}
+
+function addProduct(){
+
+ let name=document.getElementById("name").value.trim();
+
+ let qty=Number(document.getElementById("qty").value);
+
+ let buy=Number(document.getElementById("buy").value);
+
+ let sell=Number(document.getElementById("sell").value);
+
+ if(!name || document.getElementById("qty").value==="" || qty<0 || buy<0 || sell<0){
+
+ document.getElementById("message").innerText="تکایە زانیارییەکان بە دروستی پڕبکەرەوە";
+
+ return;
+
+ }
+
+ products.push({name,qty,buy,sell});
+
+ save();
+
+ ["name","qty","buy","sell"].forEach(id=>document.getElementById(id).value="");
+
+ document.getElementById("message").innerText="بەرهەمەکە بە سەرکەوتوویی زیادکرا 💙";
+
+}
+
+function changeQty(i,amount){
+
+ if(products[i].qty+amount<0)return;
+
+ products[i].qty+=amount;
+
+ save();
+
+}
+
+function removeProduct(i){
+
+ if(confirm("دڵنیایت لە سڕینەوەی ئەم بەرهەمە؟")){
+
+ products.splice(i,1);
+
+ save();
+
+ }
+
+}
+
+function render(){
+
+ let q=document.getElementById("search").value.toLowerCase();
+
+ let filtered=products.map((p,i)=>({...p,i})).filter(p=>p.name.toLowerCase().includes(q));
+
+ document.getElementById("list").innerHTML=filtered.map(p=>`
+
+ <tr>
+
+ <td>${escapeHTML(p.name)} ${p.qty===0?"🔴":""}</td>
+
+ <td>${p.qty}</td>
+
+ <td>${p.buy}</td>
+
+ <td>${p.sell}</td>
+
+ <td>
+
+ <button class="secondary" onclick="changeQty(${p.i},1)">+</button>
+
+ <button class="secondary" onclick="changeQty(${p.i},-1)">−</button>
+
+ <button class="danger" onclick="removeProduct(${p.i})">×</button>
+
+ </td>
+
+ </tr>`).join("");
+
+ document.getElementById("total").innerText=products.length;
+
+ document.getElementById("quantity").innerText=products.reduce((s,p)=>s+p.qty,0);
+
+ document.getElementById("empty").innerText=products.filter(p=>p.qty===0).length;
+
+}
+
+function escapeHTML(s){
+
+ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+}
+
+</script>
+
+</body>
+
+</html>
